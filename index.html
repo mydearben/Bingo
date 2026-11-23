@@ -35,13 +35,12 @@
         </div>
         <aside class="hero-art" aria-label="Bingo card illustration">
           <div class="art-card">
-            <div class="art-heading"><span>YOUR NETWORKING CARD</span><b>5 × 5</b></div>
+            <div class="art-heading"><span>YOUR NETWORKING CARD</span><b>4 × 4</b></div>
             <div class="art-grid">
-              <span>Has a pet</span><span>Loves coffee</span><span>Speaks 3 languages</span><span>Enjoys hiking</span><span>Plays a sport</span>
-              <span>Visited Japan</span><span>Early bird</span><span>Can cook</span><span>Has siblings</span><span>Book lover</span>
-              <span>Has a hobby</span><span>Works in Finance</span><strong>FREE</strong><span>Likes music</span><span>Has travelled</span>
-              <span>Enjoys gaming</span><span>Can swim</span><span>Foodie</span><span>Has a pet</span><span>Night owl</span>
-              <span>Creative</span><span>Team player</span><span>Photographer</span><span>Sports fan</span><span>New skill</span>
+              <span>Has a pet</span><span>Loves coffee</span><span>Speaks 3 languages</span><span>Enjoys hiking</span>
+              <span>Visited Japan</span><span>Early bird</span><span>Can cook</span><span>Has siblings</span>
+              <span>Works in Finance</span><span>Likes music</span><span>Can swim</span><span>Enjoys gaming</span>
+              <span>Photographer</span><span>Sports fan</span><span>Book lover</span><span>Travels often</span>
             </div>
           </div>
           <div class="floating-note">Say hello 👋</div>
@@ -60,7 +59,7 @@
           </div>
           <aside class="progress-panel">
             <p class="eyebrow">YOUR PROGRESS</p>
-            <div class="progress-number"><strong id="progress-count">0</strong><span>/ 24</span></div>
+            <div class="progress-number"><strong id="progress-count">0</strong><span>/ 16</span></div>
             <div class="progress-track"><div id="progress-fill"></div></div>
             <p id="progress-copy" class="muted">Start a conversation to mark your first square.</p>
             <div class="divider"></div>
@@ -101,17 +100,21 @@
               <div class="divider"></div>
               <h3>Join link</h3><p class="muted small">Share this link and the room code with attendees. The link opens the participant join screen.</p>
               <div class="share-row"><input id="share-link" readonly /><button id="copy-link" class="button button-secondary" type="button">Copy</button></div>
+              <div class="qr-share">
+                <div id="qr-code" class="qr-code" aria-label="Event join QR code"></div>
+                <div class="qr-actions"><b>Scan to join</b><p class="muted small">The QR code contains your room-specific participant link.</p><button id="download-qr" class="button button-secondary" type="button">Download QR code</button><p id="qr-message" class="message"></p></div>
+              </div>
             </div>
             <div class="admin-card">
-              <div class="card-heading"><div><p class="eyebrow">BINGO CONTENT</p><h2>Square statements</h2></div><span class="pill">24 prompts</span></div>
-              <p class="muted small">Add statements that help colleagues discover something about one another. A 5×5 card has 24 prompts and one free centre square.</p>
+              <div class="card-heading"><div><p class="eyebrow">BINGO CONTENT</p><h2>Square statements</h2></div><span class="pill">16 prompts</span></div>
+              <p class="muted small">Add 16 statements that help colleagues discover something about one another. Every square on the 4×4 card is playable; there is no free square.</p>
               <textarea id="prompt-list" rows="14" spellcheck="false"></textarea>
               <button id="save-prompts" class="button button-primary" type="button">Save statements</button>
               <p id="prompt-save-message" class="message"></p>
             </div>
           </div>
           <div class="admin-card submissions-card">
-            <div class="card-heading"><div><p class="eyebrow">LIVE ACTIVITY</p><h2>Winner submissions</h2></div><button id="refresh-admin" class="button button-secondary" type="button">Refresh</button></div>
+            <div class="card-heading"><div><p class="eyebrow">LIVE ACTIVITY</p><h2>Winner submissions</h2><p class="muted small">The list updates automatically while the organiser dashboard is open.</p></div><button id="refresh-admin" class="button button-secondary" type="button">Refresh</button></div>
             <div id="submission-list" class="submission-list"><p class="muted">Sign in to view submissions.</p></div>
           </div>
           <div class="admin-card">
@@ -135,6 +138,7 @@
       <p id="square-error" class="message"></p>
     </form>
   </dialog>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" referrerpolicy="no-referrer"></script>
   <script type="module" src="./app.js"></script>
 </body>
 </html>
