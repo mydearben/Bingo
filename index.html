@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#172b4d" />
+  <title>People Bingo — Company Networking</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="./"><span class="brand-mark">PB</span><span>People Bingo</span></a>
+      <div class="top-actions">
+        <span id="connection-state" class="connection"><i></i> Not connected</span>
+        <button id="organiser-link" class="button button-quiet" type="button">Organiser</button>
+      </div>
+    </header>
+
+    <main>
+      <section id="welcome-view" class="view hero-layout">
+        <div class="hero-copy">
+          <p class="eyebrow">MEET SOMEONE NEW</p>
+          <h1>Make connections.<br><span>One square at a time.</span></h1>
+          <p class="lead">Find colleagues who match each statement, have a conversation, and collect names to complete your Bingo card.</p>
+          <div class="join-card">
+            <label for="room-code">Event room code</label>
+            <input id="room-code" maxlength="6" placeholder="e.g. TEAM26" autocomplete="off" />
+            <label for="participant-name">Your name</label>
+            <input id="participant-name" maxlength="60" placeholder="Enter your name" autocomplete="name" />
+            <button id="join-button" class="button button-primary button-wide" type="button">Join the Bingo</button>
+            <p id="join-message" class="message" role="status"></p>
+          </div>
+          <p class="microcopy">No account needed. Use the name your colleagues know you by.</p>
+        </div>
+        <aside class="hero-art" aria-label="Bingo card illustration">
+          <div class="art-card">
+            <div class="art-heading"><span>YOUR NETWORKING CARD</span><b>5 × 5</b></div>
+            <div class="art-grid">
+              <span>Has a pet</span><span>Loves coffee</span><span>Speaks 3 languages</span><span>Enjoys hiking</span><span>Plays a sport</span>
+              <span>Visited Japan</span><span>Early bird</span><span>Can cook</span><span>Has siblings</span><span>Book lover</span>
+              <span>Has a hobby</span><span>Works in Finance</span><strong>FREE</strong><span>Likes music</span><span>Has travelled</span>
+              <span>Enjoys gaming</span><span>Can swim</span><span>Foodie</span><span>Has a pet</span><span>Night owl</span>
+              <span>Creative</span><span>Team player</span><span>Photographer</span><span>Sports fan</span><span>New skill</span>
+            </div>
+          </div>
+          <div class="floating-note">Say hello 👋</div>
+        </aside>
+      </section>
+
+      <section id="participant-view" class="view hidden">
+        <div class="section-heading">
+          <div><p class="eyebrow">YOU'RE IN</p><h1 id="participant-title">Your Bingo card</h1><p id="participant-subtitle" class="lead small-lead"></p></div>
+          <button id="leave-button" class="button button-quiet" type="button">Leave</button>
+        </div>
+        <div class="game-layout">
+          <div>
+            <div class="instruction-banner"><b>How to play</b><span>Tap a square, enter the colleague's name, and save it. Ask first, and use a different colleague for each square.</span></div>
+            <div id="bingo-grid" class="bingo-grid" aria-label="Your Bingo card"></div>
+          </div>
+          <aside class="progress-panel">
+            <p class="eyebrow">YOUR PROGRESS</p>
+            <div class="progress-number"><strong id="progress-count">0</strong><span>/ 24</span></div>
+            <div class="progress-track"><div id="progress-fill"></div></div>
+            <p id="progress-copy" class="muted">Start a conversation to mark your first square.</p>
+            <div class="divider"></div>
+            <h3>How to win</h3>
+            <p class="muted">Complete any horizontal, vertical or diagonal line. Submit your card for organiser verification.</p>
+            <div id="line-status" class="line-status">No Bingo line yet</div>
+            <button id="submit-bingo" class="button button-primary button-wide" disabled type="button">Submit for verification</button>
+            <p id="submission-message" class="message" role="status"></p>
+          </aside>
+        </div>
+      </section>
+
+      <section id="organiser-view" class="view hidden">
+        <div class="section-heading"><div><p class="eyebrow">EVENT CONTROL</p><h1>Organiser dashboard</h1><p class="lead small-lead">Manage your room, prompts and winner verification.</p></div><button id="organiser-logout" class="button button-quiet hidden" type="button">Sign out</button></div>
+        <div id="organiser-login" class="login-card">
+          <h2>Organiser sign in</h2>
+          <p class="muted">Sign in using the organiser account configured in Supabase Authentication.</p>
+          <label for="organiser-email">Email</label><input id="organiser-email" type="email" autocomplete="username" placeholder="you@company.com" />
+          <label for="organiser-password">Password</label><input id="organiser-password" type="password" autocomplete="current-password" placeholder="Password" />
+          <button id="organiser-login-button" class="button button-primary button-wide" type="button">Sign in</button>
+          <p id="organiser-login-message" class="message" role="status"></p>
+        </div>
+        <div id="organiser-panel" class="hidden">
+          <div class="stats-grid">
+            <div class="stat-card"><span>Room code</span><strong id="admin-room-code">—</strong></div>
+            <div class="stat-card"><span>Participants</span><strong id="admin-participant-count">0 / 200</strong></div>
+            <div class="stat-card"><span>Submissions</span><strong id="admin-submission-count">0</strong></div>
+            <div class="stat-card"><span>Verified winners</span><strong id="admin-winner-count">0</strong></div>
+          </div>
+          <div class="admin-columns">
+            <div class="admin-card">
+              <div class="card-heading"><div><p class="eyebrow">ROOM SETTINGS</p><h2>Game room</h2></div><span id="room-status" class="pill">—</span></div>
+              <label for="admin-room-name">Event name</label><input id="admin-room-name" maxlength="80" />
+              <label for="admin-capacity">Maximum participants</label><input id="admin-capacity" type="number" min="1" max="200" value="200" />
+              <label for="admin-room-state">Room status</label><select id="admin-room-state"><option value="open">Open for joining</option><option value="paused">Paused</option><option value="closed">Closed</option></select>
+              <button id="save-room" class="button button-primary" type="button">Save room settings</button>
+              <p id="room-save-message" class="message"></p>
+              <div class="divider"></div>
+              <h3>Join link</h3><p class="muted small">Share this link and the room code with attendees. The link opens the participant join screen.</p>
+              <div class="share-row"><input id="share-link" readonly /><button id="copy-link" class="button button-secondary" type="button">Copy</button></div>
+            </div>
+            <div class="admin-card">
+              <div class="card-heading"><div><p class="eyebrow">BINGO CONTENT</p><h2>Square statements</h2></div><span class="pill">24 prompts</span></div>
+              <p class="muted small">Add statements that help colleagues discover something about one another. A 5×5 card has 24 prompts and one free centre square.</p>
+              <textarea id="prompt-list" rows="14" spellcheck="false"></textarea>
+              <button id="save-prompts" class="button button-primary" type="button">Save statements</button>
+              <p id="prompt-save-message" class="message"></p>
+            </div>
+          </div>
+          <div class="admin-card submissions-card">
+            <div class="card-heading"><div><p class="eyebrow">LIVE ACTIVITY</p><h2>Winner submissions</h2></div><button id="refresh-admin" class="button button-secondary" type="button">Refresh</button></div>
+            <div id="submission-list" class="submission-list"><p class="muted">Sign in to view submissions.</p></div>
+          </div>
+          <div class="admin-card">
+            <div class="card-heading"><div><p class="eyebrow">ATTENDEES</p><h2>Participant list</h2></div><button id="export-participants" class="button button-secondary" type="button">Export CSV</button></div>
+            <div id="participant-list" class="participant-list"></div>
+          </div>
+        </div>
+      </section>
+    </main>
+    <footer><span>People Bingo</span><span>Built for better conversations.</span></footer>
+  </div>
+
+  <dialog id="square-dialog" class="square-dialog">
+    <form method="dialog" id="square-form">
+      <button class="dialog-close" value="cancel" aria-label="Close">×</button>
+      <p class="eyebrow">BINGO SQUARE</p><h2 id="dialog-prompt">Find a colleague</h2>
+      <p class="muted">Who did you speak with who matches this statement?</p>
+      <label for="colleague-name">Colleague's name</label><input id="colleague-name" maxlength="60" placeholder="Enter their name" required />
+      <p class="microcopy">Please get their agreement before adding their name.</p>
+      <div class="dialog-actions"><button class="button button-secondary" value="cancel">Cancel</button><button id="save-square" class="button button-primary" value="save">Save square</button></div>
+      <p id="square-error" class="message"></p>
+    </form>
+  </dialog>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
