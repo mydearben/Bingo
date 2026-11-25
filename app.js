@@ -15,6 +15,8 @@ let currentCard = [];
 let activeSquare = null;
 let adminRoom = null;
 let adminChannel = null;
+let participantChannel = null;
+let waitingCheckTimer = null;
 let adminRefreshTimer = null;
 let adminRefreshInFlight = false;
 let adminRefreshQueued = false;
@@ -26,7 +28,7 @@ function message(id, text, success = false) {
   el.classList.toggle("success", success);
 }
 function showView(name) {
-  ["welcome", "participant", "organiser"].forEach(v => $(`${v}-view`).classList.toggle("hidden", v !== name));
+  ["welcome", "waiting", "participant", "organiser"].forEach(v => $(`${v}-view`).classList.toggle("hidden", v !== name));
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 function connected(ok, label = "Live updates") {
@@ -83,10 +85,61 @@ function setParticipantSession(data, token, code) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify({ token, code }));
   $("participant-title").textContent = currentRoom.name;
   $("participant-subtitle").textContent = `Playing as ${currentParticipant.name} · Room ${code}`;
+  $("waiting-room-title").textContent = currentRoom.name;
+  $("waiting-participant-name").textContent = currentParticipant.name;
+  $("waiting-room-code").textContent = code;
   message("submission-message", "");
   drawCard();
-  connected(true, "Session restored");
-  showView("participant");
+  if (data.game_started) {
+    stopWaitingRoom();
+    connected(true, "Game started");
+    showView("participant");
+  } else {
+    showWaitingRoom();
+    startWaitingRoom();
+  }
+}
+function showWaitingRoom() {
+  $("waiting-room-title").textContent = currentRoom?.name || "You’re on the list!";
+  $("waiting-participant-name").textContent = currentParticipant?.name || "Participant";
+  $("waiting-room-code").textContent = currentRoom?.code || "—";
+  showView("waiting");
+}
+function startWaitingRoom() {
+  stopWaitingRoom();
+  if (!currentRoom || !currentParticipant) return;
+  participantChannel = supabase.channel(`bingo-room-${currentRoom.id}`)
+    .on("broadcast", { event: "game_started" }, () => checkGameStarted())
+    .subscribe(status => {
+      if (status === "SUBSCRIBED") {
+        connected(true, "Waiting for start");
+        checkGameStarted();
+      }
+      if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") connected(false);
+    });
+  // Low-frequency fallback in case a device briefly loses its realtime connection.
+  waitingCheckTimer = setInterval(checkGameStarted, 15000);
+}
+function stopWaitingRoom() {
+  if (waitingCheckTimer) clearInterval(waitingCheckTimer);
+  waitingCheckTimer = null;
+  if (participantChannel) supabase.removeChannel(participantChannel);
+  participantChannel = null;
+}
+async function checkGameStarted() {
+  if (!currentParticipant || !currentRoom) return;
+  const { data, error } = await supabase.rpc("get_my_bingo_participant", {
+    p_session_token: currentParticipant.token,
+    p_room_code: currentRoom.code
+  });
+  if (error || !data) return;
+  currentCard = data.card;
+  if (data.game_started) {
+    stopWaitingRoom();
+    drawCard();
+    connected(true, "Game started");
+    showView("participant");
+  }
 }
 async function restoreParticipantSession() {
   let saved;
@@ -143,17 +196,19 @@ async function joinRoom() {
     p_room_code: code, p_participant_name: name, p_session_token: token
   });
   $("join-button").disabled = false;
-  $("join-button").textContent = "Join the Bingo";
+  $("join-button").textContent = "Register for the game";
   if (error) return message("join-message", error.message);
   setParticipantSession(data, token, code);
 }
-$("leave-button").addEventListener("click", () => {
+function leaveParticipantSession() {
+  stopWaitingRoom();
   currentParticipant = null;
   currentRoom = null;
   currentCard = [];
   localStorage.removeItem(STORAGE_KEY);
   showView("welcome");
-});
+}
+$("leave-button").addEventListener("click", leaveParticipantSession);
 $("submit-bingo").addEventListener("click", async () => {
   if (!currentParticipant) return;
   $("submit-bingo").disabled = true;
@@ -202,11 +257,23 @@ async function loadAdmin() {
   $("admin-room-name").value = data.room_name;
   $("admin-capacity").value = data.capacity;
   $("admin-room-state").value = data.status;
-  $("room-status").textContent = data.status;
+  $("room-status").textContent = data.game_started ? "game started" : data.status;
   $("prompt-list").value = data.prompts.join("\n");
+  updateGameControls();
   updateJoinLinkAndQr();
   await refreshAdmin();
   startAdminRealtime();
+}
+function updateGameControls() {
+  const started = !!adminRoom?.game_started;
+  $("game-state-title").textContent = started ? "Game is in progress" : "Game not started";
+  $("game-state-copy").textContent = started
+    ? "All registered participants have been released into the Bingo game. New registrations are locked."
+    : "Participants can register and will wait here until you start the game. Starting is a one-way action for this room.";
+  const count = Number(($("admin-participant-count").textContent || "0").split(" /")[0]);
+  $("start-game").disabled = started || count < 1;
+  $("start-game").textContent = started ? "Game already started" : "Start game for everyone";
+  $("admin-room-state").disabled = started;
 }
 function updateJoinLinkAndQr() {
   const url = new URL(location.href);
@@ -246,7 +313,8 @@ async function refreshAdmin() {
     $("admin-participant-count").textContent = `${data.participant_count} / ${adminRoom.capacity}`;
     $("admin-submission-count").textContent = data.submission_count;
     $("admin-winner-count").textContent = data.winner_count;
-    $("room-status").textContent = adminRoom.status;
+    $("room-status").textContent = adminRoom.game_started ? "game started" : adminRoom.status;
+    updateGameControls();
     $("participant-list").innerHTML = data.participants.map(p =>
       `<div class="participant-row"><div><strong>${safeText(p.name)}</strong><small>Joined ${new Date(p.joined_at).toLocaleString()}</small></div><small>${p.completed_count}/16 squares</small></div>`
     ).join("") || '<p class="muted">No participants have joined yet.</p>';
@@ -302,6 +370,37 @@ async function reviewSubmission(id, status) {
   if (error) alert(error.message);
   else await refreshAdmin();
 }
+$("start-game").addEventListener("click", async () => {
+  if (!adminRoom || adminRoom.game_started) return;
+  const count = Number(($("admin-participant-count").textContent || "0").split(" /")[0]);
+  if (!count) return message("start-game-message", "Wait until at least one participant has registered.");
+  const confirmed = window.confirm(`Start the Bingo game for all ${count} registered participant(s)? New registrations will be locked.`);
+  if (!confirmed) return;
+  $("start-game").disabled = true;
+  const { data, error } = await supabase.rpc("start_bingo_game");
+  if (error) {
+    message("start-game-message", error.message);
+    updateGameControls();
+    return;
+  }
+  adminRoom.game_started = true;
+  adminRoom.status = "closed";
+  $("admin-room-state").value = "closed";
+  updateGameControls();
+  message("start-game-message", `Game started for ${data.participant_count} registered participant(s).`, true);
+  const channel = supabase.channel(`bingo-room-${adminRoom.id}`);
+  try {
+    await new Promise(resolve => {
+      channel.subscribe(status => {
+        if (status === "SUBSCRIBED" || status === "CHANNEL_ERROR" || status === "TIMED_OUT") resolve();
+      });
+    });
+    await channel.send({ type: "broadcast", event: "game_started", payload: { started_at: data.started_at } });
+  } finally {
+    supabase.removeChannel(channel);
+  }
+  await refreshAdmin();
+});
 $("refresh-admin").addEventListener("click", refreshAdmin);
 $("save-room").addEventListener("click", async () => {
   const { error } = await supabase.rpc("update_bingo_room", {
@@ -314,6 +413,7 @@ $("save-room").addEventListener("click", async () => {
   adminRoom.capacity = Number($("admin-capacity").value);
   adminRoom.status = $("admin-room-state").value;
   message("room-save-message", "Room settings saved.", true);
+  updateGameControls();
   await refreshAdmin();
 });
 $("save-prompts").addEventListener("click", async () => {

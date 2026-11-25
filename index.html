@@ -28,10 +28,10 @@
             <input id="room-code" maxlength="6" placeholder="e.g. TEAM26" autocomplete="off" />
             <label for="participant-name">Your name</label>
             <input id="participant-name" maxlength="60" placeholder="Enter your name" autocomplete="name" />
-            <button id="join-button" class="button button-primary button-wide" type="button">Join the Bingo</button>
+            <button id="join-button" class="button button-primary button-wide" type="button">Register for the game</button>
             <p id="join-message" class="message" role="status"></p>
           </div>
-          <p class="microcopy">No account needed. Use the name your colleagues know you by.</p>
+          <p class="microcopy">You’ll enter the waiting room first. The organiser will start the game for everyone together.</p>
         </div>
         <aside class="hero-art" aria-label="Bingo card illustration">
           <div class="art-card">
@@ -45,6 +45,21 @@
           </div>
           <div class="floating-note">Say hello 👋</div>
         </aside>
+      </section>
+
+      <section id="waiting-view" class="view hidden">
+        <div class="waiting-wrap">
+          <div class="waiting-icon">⏳</div>
+          <p class="eyebrow">YOU ARE REGISTERED</p>
+          <h1 id="waiting-room-title">You’re on the list!</h1>
+          <p class="lead waiting-lead">Thanks for joining. The Bingo card will become available when the organiser starts the game.</p>
+          <div class="waiting-ticket">
+            <span>REGISTERED AS</span><strong id="waiting-participant-name">Participant</strong>
+            <span>EVENT ROOM</span><strong id="waiting-room-code">—</strong>
+            <div class="waiting-pulse"><i></i> Waiting for the organiser to start</div>
+          </div>
+          <p class="muted">You can keep this page open. If you refresh, your registration will be restored automatically.</p>
+        </div>
       </section>
 
       <section id="participant-view" class="view hidden">
@@ -94,7 +109,12 @@
               <div class="card-heading"><div><p class="eyebrow">ROOM SETTINGS</p><h2>Game room</h2></div><span id="room-status" class="pill">—</span></div>
               <label for="admin-room-name">Event name</label><input id="admin-room-name" maxlength="80" />
               <label for="admin-capacity">Maximum participants</label><input id="admin-capacity" type="number" min="1" max="200" value="200" />
-              <label for="admin-room-state">Room status</label><select id="admin-room-state"><option value="open">Open for joining</option><option value="paused">Paused</option><option value="closed">Closed</option></select>
+              <label for="admin-room-state">Registration status</label><select id="admin-room-state"><option value="open">Open for joining</option><option value="paused">Paused</option><option value="closed">Closed</option></select>
+              <div class="start-game-panel">
+                <div><b id="game-state-title">Game not started</b><p id="game-state-copy" class="muted small">Participants can register and will wait here until you start the game.</p></div>
+                <button id="start-game" class="button button-primary" type="button" disabled>Start game for everyone</button>
+              </div>
+              <p id="start-game-message" class="message" role="status"></p>
               <button id="save-room" class="button button-primary" type="button">Save room settings</button>
               <p id="room-save-message" class="message"></p>
               <div class="divider"></div>
